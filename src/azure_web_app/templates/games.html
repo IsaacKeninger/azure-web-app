@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Games{% endblock %}
+
+{% block content %}
+
+        <h1>The other games I like!</h1>
+        {% for game in my_games %}
+            <div class="accordion" id="gamesAccordion">
+                <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#game-collapse-{{ game.id }}" aria-expanded="true" aria-controls="game-collapse-{{ game.id }}">
+                    {{ game.title }}
+                </button>
+                </h2>
+                <div id="game-collapse-{{ game.id }}" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+                        <p>Release Date: {{ game.releasedate | capitalize }} </p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p>No games yet!</p>
+        {% endfor %}
+{% endblock %}
