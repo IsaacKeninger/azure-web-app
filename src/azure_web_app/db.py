@@ -10,20 +10,15 @@
 # request ends. You never need to open or close a connection yourself.
 
 import os
-
 import mssql_python
 from flask import Flask, g
-
-from ._constants import CONNECTION_STRING_VARIABLE, BAD_LOGIN_MESSAGE
+from ._constants import CONNECTION_STRING_VARIABLE
 
 def get_connection_string() -> str:
     """Read the connection string from the environment"""
     
     # On your laptop, create_app() loads it from your .secret.env file. On Azure,
     # it comes from the environment variable you set in the portal.
-    # ======================= GUIDE HELPER: DELETE BEFORE YOU SUBMIT =======================
-    # These checks only exist to give you clearer error messages while you work
-    # through the guide. Delete everything between the two GUIDE HELPER lines.
     connection_string = os.environ.get(CONNECTION_STRING_VARIABLE)
     if not connection_string:
         raise RuntimeError(
@@ -39,7 +34,6 @@ def get_connection_string() -> str:
             f"Delete the 'Driver={{ODBC Driver 18 for SQL Server}};' part of "
             f"{CONNECTION_STRING_VARIABLE}. mssql-python includes its own driver."
         )
-    # ===================================== END GUIDE HELPER =====================================
 
     return os.environ[CONNECTION_STRING_VARIABLE]
 
@@ -81,7 +75,7 @@ class Database:
         with self.connection.cursor() as cursor:
             try:
                 cursor.execute(
-                    "INSERT INTO Users (username, password, display_name) VALUES (?, ?, ?)",
+                    "INSERT INTO Users (username, password, display_name, last_login_time) VALUES (?, ?, ?, GETDATE())",
                     (username, hashed_password, display_name),
                 )
             except mssql_python.IntegrityError:
@@ -96,12 +90,10 @@ class Database:
 
     def get_login_info(self, username: str):
         """ Returns login information from parameter 'username' """
-        if self.username_exists(username):
-            with self.connection.cursor() as cursor:
-                cursor.execute("""SELECT password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
-                return cursor.fetchone()
-        else:
-            return BAD_LOGIN_MESSAGE
+        with self.connection.cursor() as cursor:
+            cursor.execute("""SELECT password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
+            return cursor.fetchone()
+        return None
 
     def update_last_login(self, username: str):
         """ Updates last login time from parameter 'username' """

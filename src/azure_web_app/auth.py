@@ -99,7 +99,7 @@ class Login(Resource):
     def post(self):
         data = get_json_body()
 
-        missing_field = find_missing_field(data, ("username", "password", "displayName"))
+        missing_field = find_missing_field(data, ("username", "password"))
         if missing_field is not None:
             return {"message": f"Missing required field: {missing_field}"}, 400
 
@@ -108,10 +108,11 @@ class Login(Resource):
 
         user = get_db().get_login_info(username)
 
-        if not user or not check_password_hash(data.stored_hash, password):
+        if not user or not check_password_hash(user.password, password):
             return {"message": BAD_LOGIN_MESSAGE}, 401
 
-        self.update_last_login(username)
+        get_db().update_last_login(username)
+
         return {"message": f"Welcome back {user.display_name}. Last Login Time: {user.last_login_time}"}, 201
 
 def setup_auth(app: Flask) -> None:

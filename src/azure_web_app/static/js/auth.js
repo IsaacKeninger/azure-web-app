@@ -136,23 +136,17 @@ async function submitRegisterForm(event) {
 	hideModal("registerModal");
 }
 
-// TODO: Write submitLoginForm(event) here.
-// It should look a lot like submitRegisterForm above:
-//   1. Stop the browser's default form submission.
-//   2. Validate the loginUsername and loginPassword inputs.
-//   3. POST the username and password to /login.
-//   4. Show the server's message in an alert, whether the login worked or not.
-//   5. If it worked, close the login modal.
 async function submitLoginForm(event) {
+
 	event.preventDefault();
 
-	let isValid = validatePassword("registerPassword");
-	isValid = validateUsername("registerUsername") && isValid;
+	let isValid = validatePassword("loginPassword");
+	isValid = validateUsername("loginUsername") && isValid;
 	if (!isValid) {
 		return;
 	}
 
-	const formdata = {
+	const formData = {
 		username: document.getElementById("loginUsername").value,
 		password: document.getElementById("loginPassword").value
 	}
@@ -168,8 +162,8 @@ async function submitLoginForm(event) {
 		return;
 	}
 
-	alert("Login successful! " + reply.result.displayName);
-	hideModal("registerModal");
+	alert(reply.result.message);
+	hideModal("loginModal");
 }
 
 // Remove the green/red validation styling from an input once the user starts
@@ -201,8 +195,7 @@ function attachEventListeners() {
 	// includes this script, but a page might not have every form on it.
 	document.getElementById("registerForm")?.addEventListener("submit", submitRegisterForm);
 
-	// TODO: Attach submitLoginForm to the login form's "submit" event.
-	document.getElementById("loginForm")?.addEventListener("login", submitLoginForm);
+	document.getElementById("loginForm")?.addEventListener("submit", submitLoginForm);
 
 	for (const input of document.querySelectorAll("input")) {
 		input.addEventListener("input", clearValidation);
