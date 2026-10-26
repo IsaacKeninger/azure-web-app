@@ -91,7 +91,7 @@ class Database:
     def get_login_info(self, username: str):
         """ Returns login information from parameter 'username' """
         with self.connection.cursor() as cursor:
-            cursor.execute("""SELECT userid, password, display_name, last_login_time, FROM Users WHERE username = ?""", (username,),)
+            cursor.execute("""SELECT userid, password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
             return cursor.fetchone()
         return None
 

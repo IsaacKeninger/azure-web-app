@@ -20,7 +20,6 @@ from ._constants import (
     SESSION_COOKIE_NAME,
 )
 from .db import get_db
-from azure_web_app import db
 from azure_web_app.sessions import clear_session_cookie, set_session_cookie, verify_session_cookie
 
 def get_json_body() -> dict:
@@ -117,12 +116,12 @@ class Login(Resource):
 
         message = f"Welcome back {user.display_name}. Last Login Time: {user.last_login_time}"
 
-        session_id = db.create_session(user.userid)
+        session_id = get_db().create_session(user.userid)
         response = make_response({"message": message, "displayName": user.display_name}, 200)
         set_session_cookie(response, session_id)
         return response
 
-def Logout(Resource):
+class Logout(Resource):
     def post(self):
         # The browser sends our cookies automatically with every request,
         # so the JS doesn't have to do anything special.
