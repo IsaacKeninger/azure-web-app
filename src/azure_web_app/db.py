@@ -111,9 +111,24 @@ class Database:
     # comes from the database's clock, like create_date does), and commit.
     # ------------------------------------------------------------------------
 
-    # def get_login_info(self, username: str):
-    #     ...
+    def get_login_info(self, username: str):
+        """ Returns login information from parameter 'username' """
+        if self.username_exists(username):
+            with self.connection.cursor() as cursor:
+                cursor.execute("""SELECT password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
+                return cursor.fetchone()
+        else:
+            return False
 
+    def update_last_login(self, username: str):
+        """ Updates last login time from parameter 'username' """
+        if self.username_exists(username):
+            with self.connection.cursor() as cursor:
+                cursor.execute("UPDATE Users SET last_login_time = GETDATE() WHERE username = ?", (username,),)
+                self.connection.commit()
+                return True
+        else:
+            return False
 
 def get_db() -> Database:
     """Return this request's Database, connecting on first use."""
