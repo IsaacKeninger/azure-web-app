@@ -4,7 +4,7 @@ from flask import Flask, render_template
 from datetime import datetime
 from flask import Flask, abort, render_template
 from dotenv import find_dotenv, load_dotenv
-from azure_web_app import auth, db
+from azure_web_app import auth, db, sessions
 from azure_web_app._constants import SECRET_ENV_FILE
 
 FAVORITES = [
@@ -22,6 +22,7 @@ def create_app():
     load_dotenv(find_dotenv(SECRET_ENV_FILE))
     app = Flask(__name__)
     db.setup_for_app(app)
+    sessions.setup_sessions(app)
     auth.setup_auth(app)
     setup_routes(app)
     return app

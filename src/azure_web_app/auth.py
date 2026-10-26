@@ -8,18 +8,20 @@ Notice that there's no SQL in this file. Endpoints decide what should happen;
 the Database class in db.py does the talking to the database.
 """
 
-from flask import Flask, request
+from flask import Flask, request, make_response
 from flask_bcrypt import check_password_hash, generate_password_hash
 from flask_restful import Api, Resource
-
 from ._constants import (
     BAD_LOGIN_MESSAGE,
     MAX_USERNAME_LENGTH,
     MIN_PASSWORD_LENGTH,
     PASSWORD_PATTERN,
     USERNAME_PATTERN,
+    SESSION_COOKIE_NAME,
 )
 from .db import get_db
+from azure_web_app import db
+from azure_web_app.sessions import clear_session_cookie, set_session_cookie, verify_session_cookie
 
 def get_json_body() -> dict:
     """Return the request's JSON body, or an empty dict if there isn't a valid one."""
@@ -113,7 +115,12 @@ class Login(Resource):
 
         get_db().update_last_login(username)
 
-        return {"message": f"Welcome back {user.display_name}. Last Login Time: {user.last_login_time}"}, 201
+        message = f"Welcome back {user.display_name}. Last Login Time: {user.last_login_time}"
+
+        session_id = db.create_session(user.userid)
+        response = make_response({"message": message, "displayName": user.display_name}, 200)
+        set_session_cookie(response, session_id)
+        return response
 
 def setup_auth(app: Flask) -> None:
     """Register the authentication endpoints with the app. Should be called when first creating the flask app"""
