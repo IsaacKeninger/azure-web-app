@@ -122,6 +122,20 @@ class Login(Resource):
         set_session_cookie(response, session_id)
         return response
 
+def Logout(Resource):
+    def post(self):
+        # The browser sends our cookies automatically with every request,
+        # so the JS doesn't have to do anything special.
+        session_id = verify_session_cookie(request.cookies.get(SESSION_COOKIE_NAME))
+        if session_id is not None:
+            get_db().delete_session(session_id)
+
+        # Clear the cookie even if the session was already gone, so the browser
+        # stops sending a cookie that doesnt work anymore.
+        response = make_response({"message": "Logged out"}, 200)
+        clear_session_cookie(response)
+        return response
+
 def setup_auth(app: Flask) -> None:
     """Register the authentication endpoints with the app. Should be called when first creating the flask app"""
     # We create the Api object in here, instead of at the top of the file, so
@@ -129,3 +143,4 @@ def setup_auth(app: Flask) -> None:
     api = Api(app)
     api.add_resource(Register, "/register")
     api.add_resource(Login, "/login")
+    api.add_resource(Logout, "/logout")
