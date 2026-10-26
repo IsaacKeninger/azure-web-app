@@ -98,15 +98,13 @@ def load_current_user() -> None:
     if session_id is None:
         return
 
-    # This is None if the session isn't in the table anymore (for example,
-    # because the user logged out somewhere else).
     g.current_user = get_db().get_session_user(session_id)
-
+    if g.current_user is None:
+        get_db().delete_session(session_id)
 
 def inject_current_user() -> dict:
     """Make `current_user` available in every template."""
     return {"current_user": g.get("current_user")}
-
 
 def login_required(view):
     """Decorator for routes that only logged-in users may see.

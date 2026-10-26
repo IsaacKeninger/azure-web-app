@@ -117,6 +117,7 @@ class Database:
                     INSERT INTO Sessions (userid, expiry)
                     OUTPUT INSERTED.sessionid
                     VALUES (?, DATEADD(SECOND, ?, GETDATE()))
+
                     """,
                     (user_id, SESSION_LIFETIME_SECONDS),
                 )
@@ -141,7 +142,8 @@ class Database:
                        Sessions.sessionid, Sessions.expiry
                 FROM Sessions
                 JOIN Users ON Users.userid = Sessions.userid
-                WHERE Sessions.sessionid = ?
+                WHERE Sessions.sessionid = ? AND Sessions.expiry > GETDATE()
+
                 """,
                 (session_id,),
             )
