@@ -143,6 +143,34 @@ async function submitRegisterForm(event) {
 //   3. POST the username and password to /login.
 //   4. Show the server's message in an alert, whether the login worked or not.
 //   5. If it worked, close the login modal.
+async function submitLoginForm(event) {
+	event.preventDefault();
+
+	let isValid = validatePassword("registerPassword");
+	isValid = validateUsername("registerUsername") && isValid;
+	if (!isValid) {
+		return;
+	}
+
+	const formdata = {
+		username: document.getElementById("loginUsername").value,
+		password: document.getElementById("loginPassword").value
+	}
+
+	const reply = await postJson("/login", formData);
+	if (reply === null) {
+		alert("Could not reach the server. Please try again.");
+		return;
+	}
+
+	if (!reply.response.ok) {
+		alert("Login failed: " + reply.result.message);
+		return;
+	}
+
+	alert("Login successful! " + reply.result.displayName);
+	hideModal("registerModal");
+}
 
 // Remove the green/red validation styling from an input once the user starts
 // typing in it again.
