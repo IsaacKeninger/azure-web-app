@@ -162,7 +162,7 @@ async function submitLoginForm(event) {
 		return;
 	}
 
-	window.location.reload();
+	window.location.href = "/account";
 
 	alert(reply.result.message);
 	hideModal("loginModal");
