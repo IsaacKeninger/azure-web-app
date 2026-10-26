@@ -202,6 +202,7 @@ function attachEventListeners() {
 	document.getElementById("registerForm")?.addEventListener("submit", submitRegisterForm);
 
 	// TODO: Attach submitLoginForm to the login form's "submit" event.
+	document.getElementById("loginForm")?.addEventListener("login", submitLoginForm);
 
 	for (const input of document.querySelectorAll("input")) {
 		input.addEventListener("input", clearValidation);
