@@ -106,7 +106,7 @@ class Register(Resource):
 # (Part 1 is get_login_info in db.py. Write that first.)
 #
 # 1. Uncomment the Login class below, and the api.add_resource line for it in
-#    setup_auth (at the bottom of this file).
+#    setup_auth (at the bottom of this file). (DONE)
 # 2. Read the username and password from the JSON body. Look at how Register
 #    does this, including what it does when a field is missing.
 # 3. Use get_db().get_login_info(username) to look up the user.
@@ -123,10 +123,24 @@ class Register(Resource):
 #        wrote in db.py.
 # ----------------------------------------------------------------------------
 
-# class Login(Resource):
-#     def post(self):
-#         ...
+class Login(Resource):
+    def post(self):
+        data = get_json_body()
 
+        missing_field = find_missing_field(data, ("username", "password", "displayName"))
+        if missing_field is not None:
+            return {"message": f"Missing required field: {missing_field}"}, 400
+
+        username = data["username"]
+        password = data["password"]
+
+        user = get_db().get_login_info(username)
+
+        if not user or not check_password_hash(data.stored_hash, password):
+            return {"message": BAD_LOGIN_MESSAGE}, 401
+
+        self.update_last_login(username)
+        return {"message": f"Welcome back {user.display_name}. Last Login Time: {user.last_login_time}"}, 201
 
 def setup_auth(app: Flask) -> None:
     """Register the authentication endpoints with the app. Should be called when first creating the flask app"""
@@ -134,5 +148,4 @@ def setup_auth(app: Flask) -> None:
     # that nothing happens just because someone imported this module.
     api = Api(app)
     api.add_resource(Register, "/register")
-    # TODO: Once you implement Login
-    # api.add_resource(Login, "/login")
+    api.add_resource(Login, "/login")
