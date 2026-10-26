@@ -21,7 +21,6 @@ from ._constants import (
 )
 from .db import get_db
 
-
 def get_json_body() -> dict:
     """Return the request's JSON body, or an empty dict if there isn't a valid one."""
     # silent=True returns None instead of raising an error when the body
@@ -29,14 +28,12 @@ def get_json_body() -> dict:
     data = request.get_json(silent=True)
     return data if isinstance(data, dict) else {}
 
-
 def find_missing_field(data: dict, fields: tuple[str, ...]) -> str | None:
     """Return the first field that is missing (or isn't a string), or None if all are present."""
     for field in fields:
         if not isinstance(data.get(field), str):
             return field
     return None
-
 
 def validate_username(username: str) -> tuple[bool, str]:
     """Check that a username is alphanumeric and at most MAX_USERNAME_LENGTH characters.
@@ -49,7 +46,6 @@ def validate_username(username: str) -> tuple[bool, str]:
         return False, f"Username must be alphanumeric and at most {MAX_USERNAME_LENGTH} characters long"
     return True, ""
 
-
 def validate_password(password: str) -> tuple[bool, str]:
     """Check that a password is at least MIN_PASSWORD_LENGTH characters with no whitespace.
 
@@ -60,7 +56,6 @@ def validate_password(password: str) -> tuple[bool, str]:
     if not PASSWORD_PATTERN.fullmatch(password):
         return False, f"Password must be at least {MIN_PASSWORD_LENGTH} characters with no spaces"
     return True, ""
-
 
 class Register(Resource):
     def post(self):
@@ -99,29 +94,6 @@ class Register(Resource):
             return {"message": "Username already exists"}, 400
 
         return {"message": "User created successfully", "displayName": display_name}, 201
-
-
-# ----------------------------------------------------------------------------
-# YOUR TASK (part 2 of 2): implement the login endpoint.
-# (Part 1 is get_login_info in db.py. Write that first.)
-#
-# 1. Uncomment the Login class below, and the api.add_resource line for it in
-#    setup_auth (at the bottom of this file). (DONE)
-# 2. Read the username and password from the JSON body. Look at how Register
-#    does this, including what it does when a field is missing.
-# 3. Use get_db().get_login_info(username) to look up the user.
-# 4. If no user came back, OR check_password_hash(stored_hash, password) says
-#    the password is wrong, return {"message": BAD_LOGIN_MESSAGE}, 401
-#    Use the same message for both cases. Why? (Hint: what could an attacker
-#    learn if "no such user" and "wrong password" were different messages?)
-# 5. On success, return a 200 response whose "message" welcomes the user back
-#    by their display name and tells them when they last logged in.
-#    Careful: last_login is NULL in the database (None in Python) the very
-#    first time someone logs in.
-#
-# Bonus: after a successful login, call the update_last_login method you
-#        wrote in db.py.
-# ----------------------------------------------------------------------------
 
 class Login(Resource):
     def post(self):

@@ -14,8 +14,7 @@ import os
 import mssql_python
 from flask import Flask, g
 
-from ._constants import CONNECTION_STRING_VARIABLE
-
+from ._constants import CONNECTION_STRING_VARIABLE, BAD_LOGIN_MESSAGE
 
 def get_connection_string() -> str:
     """Read the connection string from the environment"""
@@ -43,7 +42,6 @@ def get_connection_string() -> str:
     # ===================================== END GUIDE HELPER =====================================
 
     return os.environ[CONNECTION_STRING_VARIABLE]
-
 
 class Database:
     """One connection to the database, plus a method for every query the app runs."""
@@ -96,21 +94,6 @@ class Database:
         self.connection.commit()
         return True
 
-    # ------------------------------------------------------------------------
-    # YOUR TASK (part 1 of 2): write get_login_info.
-    #
-    # It takes a username and returns the row for that user, or None if there
-    # is no such user. SELECT the columns Login needs: the password hash, the
-    # display name, and the last login time.
-    #
-    # fetchone() returns a row (or None). Rows from mssql-python let you use
-    # column names: row.display_name
-    #
-    # Bonus: also write update_last_login(username), which sets the user's
-    # last_login to the current time. Use GETDATE() in your SQL (so the time
-    # comes from the database's clock, like create_date does), and commit.
-    # ------------------------------------------------------------------------
-
     def get_login_info(self, username: str):
         """ Returns login information from parameter 'username' """
         if self.username_exists(username):
@@ -118,7 +101,7 @@ class Database:
                 cursor.execute("""SELECT password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
                 return cursor.fetchone()
         else:
-            return False
+            return BAD_LOGIN_MESSAGE
 
     def update_last_login(self, username: str):
         """ Updates last login time from parameter 'username' """
@@ -139,7 +122,6 @@ def get_db() -> Database:
         g.db = Database(mssql_python.connect(get_connection_string()))
     return g.db
 
-
 def close_db(exception: BaseException | None = None) -> None:
     """Close this request's Database, if the request opened one.
 
@@ -150,7 +132,6 @@ def close_db(exception: BaseException | None = None) -> None:
     db = g.pop("db", None)
     if db is not None:
         db.close()
-
 
 def setup_for_app(app: Flask) -> None:
     """Hook the database into the app. Call this from create_app()."""
