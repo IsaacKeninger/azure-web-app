@@ -169,12 +169,20 @@ async function submitLoginForm(event) {
 }
 
 async function logout() {
-	const reploy = await postJson("/logout", {});
+	const reply = await postJson("/logout", {});
 	if (reply == null || !reply.response.ok) {
 		alert("Logout failed. Please try again.");
 		return;
 	}
 	window.location.href ="/";
+}
+
+async function logoutall() {
+	const reply = await postJson("/logoutall", {});
+	if (reply == null || !reply.response.ok) {
+		alert("Logout failed. Please try again.");
+		return;
+	}
 }
 
 // Remove the green/red validation styling from an input once the user starts
@@ -207,6 +215,7 @@ function attachEventListeners() {
 	document.getElementById("registerForm")?.addEventListener("submit", submitRegisterForm);
 	document.getElementById("loginForm")?.addEventListener("submit", submitLoginForm);
 	document.getElementById("logoutButton").addEventListener("click", logout);
+	document.getElementById("logoutAllButton").addEventListener("click", logoutall);
 
 	for (const input of document.querySelectorAll("input")) {
 		input.addEventListener("input", clearValidation);

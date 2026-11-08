@@ -56,11 +56,16 @@ def favorite_detail(favorite_id: int):
 def account():
     return render_template("account.html")
 
+@login_required
+def logged_in():
+    return render_template("logged_in.html")
+
 def setup_routes(app):
     app.route("/")(index)
     app.route("/favorites/<int:favorite_id>")(favorite_detail)
     app.route("/games")(games)
     app.route("/account")(account)
+    app.route("/logged_in")(logged_in)
 
 def run_app(debug: bool = True) -> None:
     app = create_app()

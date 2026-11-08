@@ -20,7 +20,7 @@ from ._constants import (
     SESSION_COOKIE_NAME,
 )
 from .db import get_db
-from azure_web_app.sessions import clear_session_cookie, set_session_cookie, verify_session_cookie
+from azure_web_app.sessions import clear_session_cookie, load_current_user, set_session_cookie, verify_session_cookie
 
 def get_json_body() -> dict:
     """Return the request's JSON body, or an empty dict if there isn't a valid one."""
@@ -135,6 +135,16 @@ class Logout(Resource):
         clear_session_cookie(response)
         return response
 
+class LogoutAll(Resource):
+    def post(self):
+        user_id = load_current_user()
+        if user_id is not None:
+            get_db().deletes_all_sessions(user_id)
+
+        response = make_response({"message": "Logged out"}, 200)
+        clear_session_cookie(response)
+        return response
+
 def setup_auth(app: Flask) -> None:
     """Register the authentication endpoints with the app. Should be called when first creating the flask app"""
     # We create the Api object in here, instead of at the top of the file, so
@@ -143,3 +153,4 @@ def setup_auth(app: Flask) -> None:
     api.add_resource(Register, "/register")
     api.add_resource(Login, "/login")
     api.add_resource(Logout, "/logout")
+    api.add_resource(LogoutAll, "/logoutall")

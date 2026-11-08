@@ -133,6 +133,12 @@ class Database:
             cursor.execute("DELETE FROM Sessions WHERE sessionid = ?", (session_id,))
         self.connection.commit()
 
+    def deletes_all_sessions(self, user_id: str) -> None:
+        """Remove all session from the sessions table."""
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM Sessions WHERE userid = ?"), (user_id,),
+        self.connection.commit()
+
     def get_session_user(self, session_id: str):
         """Return the logged-in user's info for a session, or None if the session doesn't exist."""
         with self.connection.cursor() as cursor:
