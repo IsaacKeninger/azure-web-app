@@ -12,7 +12,7 @@
 import os
 import mssql_python
 from flask import Flask, g
-from ._constants import CONNECTION_STRING_VARIABLE
+from ._constants import CONNECTION_STRING_VARIABLE, SESSION_LIFETIME_SECONDS
 
 def get_connection_string() -> str:
     """Read the connection string from the environment"""
@@ -61,7 +61,7 @@ class Database:
     #      Nothing is saved until you commit!
     #
     # Why ? placeholders? The driver sends the values separately from the SQL,
-    # so a username like "x'; DROP TABLE Users; --" is treated as a weird
+    # so a username like "x'; DROP TABLE Users; --" is treated as a 
     # username instead of as SQL. Never build SQL with f-strings.
 
     def username_exists(self, username: str) -> bool:
@@ -91,7 +91,7 @@ class Database:
     def get_login_info(self, username: str):
         """ Returns login information from parameter 'username' """
         with self.connection.cursor() as cursor:
-            cursor.execute("""SELECT password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
+            cursor.execute("""SELECT userid, password, display_name, last_login_time FROM Users WHERE username = ?""", (username,),)
             return cursor.fetchone()
         return None
 
@@ -104,6 +104,56 @@ class Database:
                 return True
         else:
             return False
+
+    def create_session(self, user_id: int) -> str:
+            """Add a session for this user to the Sessions table and return its ID.
+
+            The database generates the ID (the NEWID() default on the sessionid
+            column), and OUTPUT INSERTED.sessionid hands it back to us.
+            """
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO Sessions (userid, expiry)
+                    OUTPUT INSERTED.sessionid
+                    VALUES (?, DATEADD(SECOND, ?, GETDATE()))
+
+                    """,
+                    (user_id, SESSION_LIFETIME_SECONDS),
+                )
+                # mssql-python gives us UNIQUEIDENTIFIER values as Python uuid.UUID
+                # objects, so we convert to a string before it goes in a cookie.
+                session_id = str(cursor.fetchone()[0])
+            self.connection.commit()
+            return session_id
+
+    def delete_session(self, session_id: str) -> None:
+        """Remove a session from the Sessions table."""
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM Sessions WHERE sessionid = ?", (session_id,))
+        self.connection.commit()
+
+    def deletes_all_sessions(self, user_id: str) -> None:
+        """Remove all session from the sessions table."""
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM Sessions WHERE userid = ?"), (user_id,),
+        self.connection.commit()
+
+    def get_session_user(self, session_id: str):
+        """Return the logged-in user's info for a session, or None if the session doesn't exist."""
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT Users.userid, Users.username, Users.display_name, Users.last_login,
+                       Sessions.sessionid, Sessions.expiry
+                FROM Sessions
+                JOIN Users ON Users.userid = Sessions.userid
+                WHERE Sessions.sessionid = ? AND Sessions.expiry > GETDATE()
+
+                """,
+                (session_id,),
+            )
+            return cursor.fetchone()
 
 def get_db() -> Database:
     """Return this request's Database, connecting on first use."""
